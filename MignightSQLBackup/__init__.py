@@ -5,7 +5,7 @@ import logging
 import azure.functions as func
 import pyodbc
 
-driver= '{ODBC Driver 17 for SQL Server}'
+driver = '{ODBC Driver 17 for SQL Server}'
 server = os.environ['AZURE_SQL_SERVER_URI']
 database = os.environ['AZURE_DB_NAME']
 username = os.environ['AZURE_DB_USERNAME']
@@ -25,12 +25,20 @@ def main(mytimer: func.TimerRequest) -> None:
 
   conn = pyodbc.connect(connection_str)
   cur = conn.cursor()
-  cur.execute("SELECT * from atable")
-  row = cur.fetchone()
+  # url = 'https://eytpihuslnyiiffw.blob.core.windows.net/sqlbackup_%s.bacpac'
+  url = './%s.bacpac' % datetime.datetime.now().strftime("%m%d%Y%H%M%S")
+  # url = url % datetime.datetime.now().strftime("%m%d%Y%H%M%S")
+  backup_sql = "BACKUP DATABASE [%s] TO DISK = N'%s'"
+  backup_sql = backup_sql % (database, url)
+  cur = cur.execute(backup_sql)
+  # row = cur.fetchone()
 
-  while row:
-      print(str(row[0]) + " " + str(row[1]))
-      row = cur.fetchone()
+  while cur.nextset():
+    pass
+
+  # while row:
+  #     print(str(row[0]) + " " + str(row[1]))
+  #     row = cur.fetchone()
 
   utc_timestamp = datetime.datetime.utcnow().replace(
       tzinfo=datetime.timezone.utc).isoformat()
